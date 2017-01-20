@@ -1,0 +1,5 @@
+[0, 1] \\rspd=80\\ One chick with two=RTag ten=WTag blocks \\pau=500\\
+[2, 3] \\rspd=80\\ two chicks \\pau=100\\
+[4, 5] \\rspd=80\\ with one clock=RTag book=WTag \\pau=300\\
+[6, 7] \\rspd=80\\ three=RTag seven=WTag fish in a tree \\pau=300\\
+[8, 9] \\rspd=80\\ four bees=RTag dragons=WTag \\pau=100\\ are after me!

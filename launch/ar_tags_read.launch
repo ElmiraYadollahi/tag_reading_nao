@@ -1,0 +1,7 @@
+<launch>
+   <node pkg="tag_reading_nao" name="ar_tags_text" type="ar_tags_detect.py" output="screen">
+      <rosparam>
+         tag_ids: [0, 1, 2, 3]
+      </rosparam>
+   </node>
+</launch>
