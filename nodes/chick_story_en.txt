@@ -1,5 +1,5 @@
-[0, 1] \\rspd=80\\ One chick with two=RTag ten=WTag blocks \\pau=500\\
-[2, 3] \\rspd=80\\ two chicks \\pau=100\\
-[4, 5] \\rspd=80\\ with one clock=RTag book=WTag \\pau=300\\
-[6, 7] \\rspd=80\\ three=RTag seven=WTag fish in a tree \\pau=300\\
-[8, 9] \\rspd=80\\ four bees=RTag dragons=WTag \\pau=100\\ are after me!
+[0, 1] \\rspd=50\\ Fox \\pau=300\\ story \\pau=500\\
+[2, 3] \\rspd=50\\ A \\pau=300\\ red=RTag brown=WTag \\pau=300\\ Fox \\pau=500\\
+[4, 5] \\rspd=50\\ in \\pau=300\\ blue=RTag green=WTag \\pau=300\\ socks \\pau=500\\
+[6, 7] \\rspd=50\\ doing \\pau=300\\ tricks \\pau=300\\ with \\pau=300\\ orange \\pau=300\\ clocks=RTag rocks=WTag \\pau=500\\
+[8, 9] \\rspd=50\\ The end. \\pau=300\\

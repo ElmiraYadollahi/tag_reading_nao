@@ -6,7 +6,8 @@ from std_msgs.msg import Int64, Int64MultiArray, String
 from geometry_msgs.msg import Point, PoseStamped
 from ar_track_alvar_msgs.msg import AlvarMarkers
 
-tag_states = { 0, 1, 2 , 3, 4, 5, 6, 7, 8, 9, 200}
+tag_states = { 0, 1, 2 , 3, 4, 5, 6, 7, 8, 9, 2222, 4444}
+card_tag_states = { 39, 40}
 tag_pairs = [	[0, 1], 
 				[2, 3], [4, 5], 
 				[6, 7], [8, 9],
@@ -103,7 +104,11 @@ class TagsCOG():
 					story_pub.publish(str(avail_pair))
 					print avail_pair
 					avail_pair = []
-					
+			if tag.id in card_tag_states:
+				card_id = tag.id
+				print card_id
+				card_pub.publish(str(card_id))
+				
 
 					
 
@@ -162,6 +167,7 @@ def line_detection(avail_pair):
 
 if  __name__ == '__main__':
 	story_pub = rospy.Publisher('tag_id_state', String, queue_size=10)
+	card_pub = rospy.Publisher('card_id_state', String, queue_size=10)
 	try:
 		TagsCOG()
 		#story()

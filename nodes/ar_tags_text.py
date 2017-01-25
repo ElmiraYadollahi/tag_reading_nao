@@ -6,7 +6,7 @@ from std_msgs.msg import Int64, Int64MultiArray, String
 from geometry_msgs.msg import Point, PoseStamped
 from ar_track_alvar_msgs.msg import AlvarMarkers
 
-tag_states = { 0, 1, 2 , 3}
+tag_states = { 0, 1, 2 , 3, 4, 5, 6, 2222, 4444}
 tag_pairs = [[0, 1], [1, 0], [2, 3], [3, 2]]
 
 #global avail_pair

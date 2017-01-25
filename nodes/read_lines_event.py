@@ -1,6 +1,35 @@
 #!/usr/bin/env python
 # -*- encoding: UTF-8 -*-
 
+import animations.embarassed_pose
+import animations.scratchHead_pose
+import animations.IdontKnow_pose
+import animations.IdontKnow2_pose
+import animations.hesitation_pose
+import animations.hesitation2_pose
+import animations.hesitation3_pose
+import animations.thinking1_pose
+import animations.thinking2_pose
+import animations.thinking3_pose
+import animations.thinking4_pose
+import animations.thinking5_pose
+import animations.thinking6_pose
+import animations.thinking7_pose
+import animations.thinking8_pose
+import animations.monster_pose
+import animations.disappointed_pose
+import animations.excited_pose
+import animations.excited2_pose
+import animations.happy_pose
+import animations.happy2_pose
+import animations.happy3_pose
+import animations.introduction_pose
+import animations.proud_pose
+import animations.nod_pose
+import animations.relieved_pose
+import animations.winner_pose
+import animations.winner2_pose
+
 from naoqi import ALProxy 
 import codecs
 import time
@@ -13,6 +42,12 @@ from std_msgs.msg import String
 from memory.msg import Animation
 
 
+""" It is a dictionary for the states of the tag:
+	False: 		means the story have not be read yet, it will go into reading with wrong tag 
+	"correcting": means the story have been read and the robot have recieved a red card
+	True:		means the story have been read and the robot have recieved a green card
+
+"""
 pairs_dict = {	'[0, 1]' : False,
 				'[2, 3]' : False,
 				'[4, 5]' : False,
@@ -28,6 +63,8 @@ story_dict ={	'[200, 201]': 1,
 				'[240, 241]': 5,
 				'[2, 3]': 7
 			}
+
+card_id = { 39, 40}
 
 reaction_states = { "low": [1, 2, 3, 4, 5],
 				  	"medium": [6, 7, 8, 9, 10],
@@ -58,6 +95,9 @@ KEY_MAPPING = { 'f': [2],
 				's': [1]  
 				}
 
+global counter
+counter = 0
+
 
 def storySelection():
 	""" Select a story from the text files of each story and return it
@@ -77,58 +117,33 @@ def storySelection():
 			selectedStory = line[:found.start()] + line[found.end():]
 			break
 
-
-
 	return selectedStory
 
 
-def tag_detection_old(msg):
-	print msg.data
-
-	tag = msg.data
-	#lst = eval(msg.data)
-	#print lst
-
-
-
-	#selectedStory = storySelection()
-	with open('chick_story_en.txt') as f:
-		lines_content = f.read().splitlines()
-		#print lines_content
-
-	line_tag = tag.replace('[', '').replace(']', '')
-	print line_tag
-	for line in lines_content:
-		found = re.search(line_tag, line)
-		if not found == None:
-			print line
-			print line[:found.start()] + line[found.end():]
-			
-			selectedStory = line[:found.start()] + line[found.end():]
-			selectedStory = selectedStory.replace('[', '').replace(']', '')
-			print selectedStory
-			break
-
-	story.say(selectedStory)
-
-	if msg.data == '[2, 3]' or msg.data == '[3, 2]':
-		if pairs_dict['[2, 3]'] == False:
-			print "test         [2, 3]"
-			#if counter == 1:
-			#rospy.loginfo("read the story...")
-			story.say("\\rspd=70\\ A red Fox \\pau=500\\ in green socks \\pau=500\\")
-			pairs_dict['[2, 3]'] = True
-
-	if msg.data == '[4, 5]' or msg.data == '[4, 5]':
-		if pairs_dict['[4, 5]'] == False:
-			print "test         [4, 5]"
-			#if counter == 1:
-			#rospy.loginfo("read the story...")
-			story.say("\\rspd=70\\ doing tricks with orange rocks")
-			pairs_dict['[4, 5]'] = True
-
-
 def tag_detection(msg):
+	"""
+
+	"""
+
+	pitch_angle = 0.3
+	global counter
+	if counter == 0:
+		LookAtTheBook(pitch_angle)
+		counter = 1
+
+	for i in pairs_dict:
+		if i != msg.data:
+			if pairs_dict[i] == "Waiting for Red-card":
+				pairs_dict[i] = False
+
+			elif pairs_dict[i] == True:
+				pairs_dict[i] = "Corrected Mode"
+
+			elif pairs_dict[i] == "Waiting for Green-card":
+				pairs_dict[i] = "Corrected Mode"
+
+			elif pairs_dict[i] == "Happy Mode":
+				pairs_dict[i] = "corrected Mode"
 
 	tag = msg.data
 	tag = tag.replace('[', '').replace(']', '')
@@ -143,13 +158,35 @@ def tag_detection(msg):
 			#print selectedStory
 			break
 
-	
+
+	rospy.Subscriber('card_id_state', String, card_detection, msg.data)
+	print pairs_dict[msg.data]
 
 	if pairs_dict[msg.data] == False:
-		story.say(selectedStory)
-		pairs_dict[msg.data] = True
+		readTheTaggedStory(selectedStory, pairs_dict[msg.data])
+		# story.say(selectedStory)
+		pairs_dict[msg.data] = "Waiting for Red-card"
 
-	if msg.data == '[2, 3]' or msg.data == '[3, 2]':
+	elif pairs_dict[msg.data] == "Correcting Mode":
+		pairs_dict[msg.data] = "Waiting for Green-card"
+		reac = 2
+		sadReactionSelection(reac)
+		readTheTaggedStory(selectedStory, True)
+		#pairs_dict[msg.data] = True
+
+	elif pairs_dict[msg.data] == "Happy Mode":
+		pairs_dict[msg.data] = True
+		reac = 2
+		happyReactionSelection(reac)
+		#story.say("\\rspd=70\\ Lets go to the next page \\pau=500\\ ")
+	
+	elif pairs_dict[msg.data] == "Corrected Mode":
+		pairs_dict[msg.data] = "Waiting for Green-card"
+		readTheTaggedStory(selectedStory, True)
+		#pairs_dict[msg.data] = True
+
+
+	"""if msg.data == '[2, 3]' or msg.data == '[3, 2]':
 		if pairs_dict[msg.data] == False:
 			print "test         [2, 3]"
 			#if counter == 1:
@@ -163,7 +200,251 @@ def tag_detection(msg):
 			#if counter == 1:
 			#rospy.loginfo("read the story...")
 			story.say("\\rspd=70\\ doing tricks with orange rocks")
-			pairs_dict['[4, 5]'] = True
+			pairs_dict['[4, 5]'] = True"""
+
+
+def card_detection(msg, tag):
+	red_card = "40"
+	green_card = "39"
+
+	card_id = msg.data
+	global red_counter
+	#print red_counter
+	if card_id == red_card:
+		if pairs_dict[tag] == "Waiting for Red-card":
+			pairs_dict[tag] = "Correcting Mode"
+			#reac = 2
+			#reactionSelection(reac)
+
+		#if pairs_dict[tag] == "corrected":
+			#pairs_dict[tag] = True
+
+		"""if red_counter == 1:
+			pairs_dict[tag] = "correcting"
+			print "hello"
+			print tag
+		elif pairs_dict[tag] >= 2:
+			pairs_dict[tag] = True
+		red_counter = red_counter + 1"""
+
+	elif card_id == green_card:
+		if pairs_dict[tag] == "Waiting for Green-card" :
+			#red_counter = 0
+			pairs_dict[tag] = "Happy Mode"
+
+			
+
+def readTheTaggedStory(taggedStory, correctFlag):
+	""" Read a story containing the tags and based on correctFlag change the tags approprietly
+
+	"""
+			
+	if correctFlag == True:
+
+		tag = "=RTag"
+		taggedStory = removeTheTag(tag, taggedStory)
+		tag = "=WTag"
+		taggedStory = removeTheWordWithTag(tag, taggedStory)
+
+	elif correctFlag == False:
+		tag = "=WTag"
+		taggedStory = removeTheTag(tag, taggedStory)
+		tag = "=RTag"
+		taggedStory = removeTheWordWithTag(tag, taggedStory)
+	
+	sayFromFile(story, taggedStory, 'ascii')
+
+
+def removeTheTag(tag, storyContent):
+	""" Find and remove the tag given to the function and leave the word connected to them intact
+
+	"""
+	while True:
+		foundTag = re.search(tag, storyContent)
+		if foundTag == None:
+			break
+		storyContent = storyContent[:foundTag.start(0)] + storyContent[foundTag.end(0):]
+
+	return storyContent
+
+
+def removeTheWordWithTag(tag, storyContent):
+	""" Find and remove the tag given to the function and remove the tag and the word connected to it as well
+
+	"""
+	while True:
+		tagWithWord = "\w+(?=" + tag + ")"
+		foundTag = re.search(tagWithWord + tag, storyContent)
+		if foundTag == None:
+			break
+		storyContent = storyContent[:foundTag.start(0)] + storyContent[foundTag.end(0):]
+
+	return storyContent
+
+
+def sayFromFile(story, filename, encoding):
+	"""
+
+	"""
+	#with codecs.open(filename, encoding=encoding) as fp:
+	#contents = filename.read()
+		# warning: print contents won't work
+	toSay = filename.encode("utf-8")
+	story.say(toSay)
+
+
+
+def sadReactionSelection(reac):
+	""" Select a reaction from the available reactions ater making mistake
+
+	"""
+	
+	reaction.setExternalCollisionProtectionEnabled("All", True)
+	reactionNum = random.randint(1,8)
+	#reactionNum = 7
+
+	if reactionNum == 1:
+		wordsBefore = "\\rspd=70\\ sorry I made a mistake"
+		sleepTime = 3
+		wordsAfter = "\\rspd=80\\wait!! \\pau=700\\ I'll try again"
+		reactToTheMistake(reac, animations.embarassed_pose, wordsBefore, wordsAfter, sleepTime)
+
+	if reactionNum == 2:
+		wordsBefore = "\\rspd=60\\ hmm!! \\pau=300\\ \\rspd=80\\ I didn't know!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=70\\ let me try again"
+		reactToTheMistake(reac, animations.scratchHead_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 3:
+		wordsBefore = "\\rspd=80\\ Oh!! sorry!!"		
+		sleepTime = 1
+		wordsAfter = "\\rspd=80\\ then, I'll read it again"
+		reactToTheMistake(reac, animations.disappointed_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 4:
+		wordsBefore = "\\rspd=80\\ Oh!!! I was wrong"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ wait!!! I'll try again"
+		reactToTheMistake(reac, animations.thinking5_pose, wordsBefore, wordsAfter, sleepTime, 0.9)
+
+	if reactionNum == 5:
+		wordsBefore = "\\rspd=80\\ hmm!!"		
+		sleepTime = 1
+		wordsAfter = "\\rspd=80\\ I need to read it again"
+		reactToTheMistake(reac, animations.thinking6_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 6:
+		wordsBefore = "\\rspd=70\\ let me see!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=70\\ you are right!! \\rspd=80\\ \\pau=200\\ let me read it again"
+		reactToTheMistake(reac, animations.thinking7_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 7:
+		wordsBefore = "\\rspd=70\\ Oh!!! \\pau=700\\ was I wrong?"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ I will try again"
+		reactToTheMistake(reac, animations.thinking8_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+
+def happyReactionSelection(reac):
+	""" Select a reaction from the available reactions ater making mistake
+
+	"""
+	
+	reaction.setExternalCollisionProtectionEnabled("All", True)
+	reactionNum = random.randint(1,8)
+	#reactionNum = 7
+
+	if reactionNum == 1:
+		wordsBefore = "\\rspd=80\\ Yeaaah!!!"
+		sleepTime = 3
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.winner_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 2:
+		wordsBefore = "\\rspd=60\\ Yeaaah!!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.winner2_pose, wordsBefore, wordsAfter, sleepTime, 1.0)
+
+	if reactionNum == 3:
+		wordsBefore = "\\rspd=80\\ Yeaaah!!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.relieved_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 4:
+		wordsBefore = "\\rspd=80\\ Yeaaah!!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.proud_pose, wordsBefore, wordsAfter, sleepTime, 0.9)
+
+	if reactionNum == 5:
+		wordsBefore = "\\rspd=80\\ Yeaaah!!!"		
+		sleepTime = 3
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.happy_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+
+	if reactionNum == 6:
+		wordsBefore = "\\rspd=70\\ Yeaaah!!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=70\\ "
+		reactToTheMistake(reac, animations.happy2_pose, wordsBefore, wordsAfter, sleepTime, 0.8)
+		postureProxy.goToPosture("Stand", 0.7)
+		pitch_angle = 0.5
+		LookAtTheBook(pitch_angle)
+
+	if reactionNum == 7:
+		wordsBefore = "\\rspd=70\\ Yeaaah!!!"		
+		sleepTime = 2
+		wordsAfter = "\\rspd=80\\ "
+		reactToTheMistake(reac, animations.happy3_pose, wordsBefore, wordsAfter, sleepTime)
+
+
+def reactToTheMistake(reac, pose, wordsBefore, wordsAfter, pause, factorSpeed = 1.0):
+	""" If the keys pressed are due to detection of mistake, the robot reacts.
+		The reaction is a physical movement and certain words which shows robot's remorse
+
+	"""
+
+
+	times = changeSpeed(pose.times, factorSpeed)
+	id = reaction.post.angleInterpolationBezier(pose.names, times, pose.keys)
+	time.sleep(pause)
+	story.post.say(wordsBefore)
+	reaction.wait(id,0)
+	time.sleep(1)
+	story.say(wordsAfter)
+	time.sleep(5)
+	correctFlag = True
+	#postureProxy.goToPosture("Stand", 1.0)
+	#readTheTaggedStory(selectedStory, correctFlag)
+	#readTheTaggedStoryWithLevel(selectedStory, correctFlag)
+
+	
+def changeSpeed(times, factor):
+	""" It changes the speed of predefined times for each pose movement
+
+	"""
+
+	for i in xrange(len(times)):
+		times[i] = [x / float(factor) for x in times[i]]
+
+	return times
+
+
+def mistakeDetected(msg):
+	""" Determin if the user has detected a mistake in reading the story
+		with checking if certain keys have been pressed
+
+	"""
+	
+	if len(msg.data) == 0 or not KEY_MAPPING.has_key(msg.data[0]):
+		return
+	reac = KEY_MAPPING[msg.data[0]]
+	print KEY_MAPPING[msg.data[0]]
+	#reactToTheMistake(reac)
+	reactionSelection(reac)
 
 
 def faceTrackingStarted(faceSize):
@@ -184,27 +465,48 @@ def faceTrackingStarted(faceSize):
 	tracker.track(targetName)
 
 
-def faceTrackingEnded(msg):
+def faceTrackingEnded():
 	""" Robot stops to track the users face and go into resting mode after certain keys are pressed
 
 	"""
 
-	if len(msg.data) == 0 or not KEY_MAPPING.has_key(msg.data[0]):
-		return
-	reac = KEY_MAPPING[msg.data[0]]
-	print KEY_MAPPING[msg.data[0]]
+	tracker.stopTracker()
+	tracker.unregisterAllTargets()
+	reaction.rest()
 
-	# Stop tracker
-	if reac == [4]:
-		tracker.stopTracker()
-		tracker.unregisterAllTargets()
-		reaction.rest()
+
+def LookAtTheBook(pitch_angle):
+	""" Move the robot's head to look at the camera
+
+	"""
+
+	reaction.setStiffnesses("Head", 1.0)
+
+	# Example showing how to set angles, using a fraction of max speed
+	names  = ["HeadYaw", "HeadPitch"]
+	angles  = [0, pitch_angle]
+	fractionMaxSpeed  = 0.05
+	reaction.setAngles(names, angles, fractionMaxSpeed)
+
+	"""names               = "HeadYaw"
+	changes             = -0.5
+	fractionMaxSpeed    = 0.05
+	motionProxy.changeAngles(names, changes, fractionMaxSpeed)"""
+
+	time.sleep(1.0)
+	reaction.setStiffnesses("Head", 0.0)
 
 
 def IntroduceNao():
 	"""
 	Nao starts introducing itself when the book cover is in front of him 
 	"""
+
+	# First, wake up
+	reaction.wakeUp()
+	#postureProxy.goToPosture("stand", 1.0)
+	#reaction.rest()
+
 
 	'''if msg.data in story_dict:
 		storyNum = story_dict[msg.data]
@@ -215,11 +517,14 @@ def IntroduceNao():
 			print "test         [0, 1]"
 			pairs_dict['[0, 1]'] = True'''
 	story.setLanguage('English')
-	story.say("\\rspd=70\\ Hello \\pau=500\\ My name is nao \\pau=500\\ I really like reading short stories")
-	story.say("\\rspd=70\\ Do you want to listen to them?")
-	time.sleep(2)
-	story.say("\\rspd=70\\ If you like, please bring the story book")
+	#story.say("\\rspd=60\\ Hello \\pau=500\\ My name is nao \\pau=500\\ I really like reading short stories")
+	#story.say("\\rspd=60\\ Do you want to listen to them?")
+	#time.sleep(2)
+	story.say("\\rspd=60\\ If you like, please bring the story book")
+	pitch_angle = 0.1
+	LookAtTheBook(pitch_angle)
 	time.sleep(5)
+
 			
 
 
@@ -233,6 +538,9 @@ def main():
 
 	global reaction
 	reaction = ALProxy("ALMotion", "nao.local", 9559)
+
+	global postureProxy
+	postureProxy = ALProxy("ALRobotPosture", "nao.local", 9559)
 	
 	global audioreaction
 	audioreaction = ALProxy("ALAudioPlayer", "nao.local", 9559)
@@ -243,16 +551,17 @@ def main():
 	# Initialize the node
 	rospy.init_node('read_lines_event')
 
-	storyNum = 1
-	pub = rospy.Publisher('story_number', String, queue_size=1)
-	pub.publish(str(storyNum))
+	#storyNum = 1
+	#pub = rospy.Publisher('story_number', String, queue_size=1)
+	#pub.publish(str(storyNum))
 	#storySelection()
 
 	# Face tracking activated
 	facesize = 0.1
 	global restingEnabled 
 	restingEnabled = False
-	faceTrackingStarted(facesize)
+	#faceTrackingStarted(facesize)
+	#faceTrackingEnded()
 
 	# Select a story and activity level
 	global selectedStory
@@ -268,10 +577,10 @@ def main():
 
 
 	rospy.Subscriber('tag_id_state', String, tag_detection)
-
-	#
+	#rospy.Subscriber('card_id_state', String, card_detection)
 
 	#readTheTaggedStory(selectedStory, correctFlag)
+
 	#readTheTaggedStoryWithLevel(selectedStory, correctFlag, mistakeNum)
 
 	#rospy.Subscriber('button_start', String, startTheStoryReading)

@@ -40,9 +40,9 @@
   	<node pkg="rviz" type="rviz" name="rviz" />
 
 
-  <node pkg="tag_reading_nao" name="ar_tags_text" type="ar_tags_detect.py" output="screen">
+  <node pkg="tag_reading_nao" name="ar_tags_detect" type="ar_tags_detect.py" output="screen">
      <rosparam>
-        tag_ids: [0, 1, 2, 3, 4, 5]
+        tag_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 2222, 4444, 62222, 63333, 39, 40]
      </rosparam>
   </node>
 </launch>
